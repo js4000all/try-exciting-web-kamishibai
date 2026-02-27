@@ -63,42 +63,9 @@
     </div>
   </div>
 
-  <script>
-    // 画像を使うときは: { bg: "assets/bg_room.jpg" } みたいにURLを入れる
-    // 立ち絵も同様: { left: "assets/hero.png" } など
-    const script = [
-      { label: "start" },
-
-      { bgColor: "linear-gradient(135deg, #243B55, #141E30)" },
-      { leftOn: true, name: "？？？", text: "……起きてる？" },
-      { name: "あなた", text: "……ん、起きてる。", },
-
-      { text: "ここは“最小の紙芝居ノベル”。とりあえず動くやつ。" },
-
-      { choice: [
-          { text: "話しかける", set: { flag_talk: true }, jump: "talk" },
-          { text: "無視する", set: { flag_talk: false }, jump: "ignore" },
-        ]
-      },
-
-      { label: "talk" },
-      { name: "？？？", text: "よし。じゃあ、今日から冒険ね。" },
-      { text: "（フラグ flag_talk が立った）" },
-      { jumpIf: { key: "flag_talk", equals: true, to: "end" } },
-
-      { label: "ignore" },
-      { name: "？？？", text: "えっ、冷た……。", },
-      { text: "（フラグ flag_talk は false）" },
-
-      { label: "end" },
-      { rightOn: true, name: "ナレーション", text: "ここで終わり。続きはあなたの台本次第！" },
-    ];
-
-    const state = {
-      idx: 0,
-      labels: new Map(),
-      flags: {},
-    };
+  <script type="module">
+    import { createRuntime } from "./js/engine/runtime.js";
+    import { script } from "./js/scenarios/sample.js";
 
     const elBg = document.getElementById("bg");
     const elLeft = document.getElementById("left");
@@ -107,111 +74,62 @@
     const elText = document.getElementById("text");
     const elChoices = document.getElementById("choices");
 
-    // ラベル位置を先に拾う
-    script.forEach((cmd, i) => {
-      if (cmd.label) state.labels.set(cmd.label, i);
-    });
-
-    function setBg(cmd) {
-      if (cmd.bg) {
-        elBg.style.backgroundImage = `url(${cmd.bg})`;
-        elBg.style.backgroundColor = "";
-      } else if (cmd.bgColor) {
-        elBg.style.backgroundImage = cmd.bgColor;
-        elBg.style.backgroundColor = "";
-      }
-    }
-
     function setChara(el, on, url) {
       el.style.display = on ? "block" : "none";
       if (url) {
         el.style.background = `center / contain no-repeat url(${url})`;
         el.style.border = "none";
       } else {
-        // 画像がない時は半透明ボックス
         el.style.background = "rgba(255,255,255,0.08)";
         el.style.border = "1px solid rgba(255,255,255,0.15)";
       }
     }
 
-    function clearChoices() {
-      elChoices.innerHTML = "";
-    }
+    const renderer = {
+      setBackground(cmd) {
+        if (cmd.bg) {
+          elBg.style.backgroundImage = `url(${cmd.bg})`;
+          elBg.style.backgroundColor = "";
+        } else if (cmd.bgColor) {
+          elBg.style.backgroundImage = cmd.bgColor;
+          elBg.style.backgroundColor = "";
+        }
+      },
+      setCharacter(side, { on, url }) {
+        setChara(side === "left" ? elLeft : elRight, on, url);
+      },
+      setName(name) {
+        elName.textContent = name;
+      },
+      setText(text) {
+        elText.textContent = text;
+      },
+      clearChoices() {
+        elChoices.innerHTML = "";
+      },
+      showChoices(choiceArr, onSelect) {
+        this.clearChoices();
+        for (const c of choiceArr) {
+          const btn = document.createElement("button");
+          btn.className = "choice";
+          btn.textContent = c.text;
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            onSelect(c);
+          };
+          elChoices.appendChild(btn);
+        }
+      },
+    };
 
-    function showChoices(choiceArr) {
-      clearChoices();
-      for (const c of choiceArr) {
-        const btn = document.createElement("button");
-        btn.className = "choice";
-        btn.textContent = c.text;
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          if (c.set) Object.assign(state.flags, c.set);
-          if (c.jump) jumpTo(c.jump);
-          next(); // ジャンプ先の次の命令へ
-        };
-        elChoices.appendChild(btn);
-      }
-    }
+    const runtime = createRuntime({ script, renderer });
 
-    function jumpTo(label) {
-      const pos = state.labels.get(label);
-      if (pos == null) return;
-      state.idx = pos;
-    }
-
-    function apply(cmd) {
-      if (cmd.bg || cmd.bgColor) setBg(cmd);
-
-      if ("leftOn" in cmd || cmd.left) setChara(elLeft, !!cmd.leftOn, cmd.left);
-      if ("rightOn" in cmd || cmd.right) setChara(elRight, !!cmd.rightOn, cmd.right);
-
-      if ("name" in cmd) elName.textContent = cmd.name ?? "";
-      if ("text" in cmd) elText.textContent = cmd.text ?? "";
-
-      if (cmd.set) Object.assign(state.flags, cmd.set);
-
-      if (cmd.jumpIf) {
-        const { key, equals, to } = cmd.jumpIf;
-        if ((state.flags[key] ?? false) === equals) jumpTo(to);
-      }
-
-      if (cmd.choice) {
-        showChoices(cmd.choice);
-        return "WAIT_CHOICE";
-      }
-
-      if (cmd.jump) {
-        jumpTo(cmd.jump);
-      }
-
-      return "CONTINUE";
-    }
-
-    function next() {
-      clearChoices();
-
-      while (state.idx < script.length) {
-        const cmd = script[state.idx++];
-        if (cmd.label) continue; // ラベルは表示しない
-        const r = apply(cmd);
-        if (r === "WAIT_CHOICE") return;
-        // 表示系の命令は一旦止める
-        if ("text" in cmd || "name" in cmd) return;
-      }
-
-      elName.textContent = "";
-      elText.textContent = "（おしまい）";
-    }
-
-    // クリックで進行
     document.getElementById("game").addEventListener("click", () => {
-      if (elChoices.childElementCount > 0) return; // 選択中は進めない
-      next();
+      if (elChoices.childElementCount > 0) return;
+      runtime.next();
     });
 
-    // スタート
-    next();
+    runtime.next();
   </script>
 </body>
 </html>

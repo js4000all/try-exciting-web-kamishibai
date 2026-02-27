@@ -82,63 +82,25 @@
       throw new Error("Open this app via http(s), not file://");
     }
 
-    const [{ createRuntime }, { script }] = await Promise.all([
+    const [{ createRuntime }, { createDomRenderer }, { script }] = await Promise.all([
       import("./js/engine/runtime.js"),
+      import("./js/renderers/domRenderer.js"),
       import("./js/scenarios/sample.js"),
     ]);
 
-    function setChara(el, on, url) {
-      el.style.display = on ? "block" : "none";
-      if (url) {
-        el.style.background = `center / contain no-repeat url(${url})`;
-        el.style.border = "none";
-      } else {
-        el.style.background = "rgba(255,255,255,0.08)";
-        el.style.border = "1px solid rgba(255,255,255,0.15)";
-      }
-    }
-
-    const renderer = {
-      setBackground(cmd) {
-        if (cmd.bg) {
-          elBg.style.backgroundImage = `url(${cmd.bg})`;
-          elBg.style.backgroundColor = "";
-        } else if (cmd.bgColor) {
-          elBg.style.backgroundImage = cmd.bgColor;
-          elBg.style.backgroundColor = "";
-        }
-      },
-      setCharacter(side, { on, url }) {
-        setChara(side === "left" ? elLeft : elRight, on, url);
-      },
-      setName(name) {
-        elName.textContent = name;
-      },
-      setText(text) {
-        elText.textContent = text;
-      },
-      clearChoices() {
-        elChoices.innerHTML = "";
-      },
-      showChoices(choiceArr, onSelect) {
-        this.clearChoices();
-        for (const c of choiceArr) {
-          const btn = document.createElement("button");
-          btn.className = "choice";
-          btn.textContent = c.text;
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            onSelect(c);
-          };
-          elChoices.appendChild(btn);
-        }
-      },
-    };
+    const renderer = createDomRenderer({
+      bg: elBg,
+      left: elLeft,
+      right: elRight,
+      name: elName,
+      text: elText,
+      choices: elChoices,
+    });
 
     const runtime = createRuntime({ script, renderer });
 
     document.getElementById("game").addEventListener("click", () => {
-      if (elChoices.childElementCount > 0) return;
+      if (runtime.status === runtime.STATUS.WAIT_CHOICE) return;
       runtime.next();
     });
 

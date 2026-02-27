@@ -10,7 +10,21 @@
 ├── README.md
 ├── LICENSE
 └── static/
-    └── index.html   # runtime / renderer / scenario を同居させた最小実装
+    ├── index.html             # renderer + 初期化
+    └── js/
+        ├── engine/runtime.js  # 進行制御
+        └── scenarios/sample.js # 台本データ
+```
+
+
+# 起動方法
+
+ES Modules を利用しているため、`file://` で直接開かずにローカルサーバー経由で起動してください。
+
+```bash
+cd static
+python -m http.server 8000
+# http://127.0.0.1:8000/index.html を開く
 ```
 
 # コマンド仕様

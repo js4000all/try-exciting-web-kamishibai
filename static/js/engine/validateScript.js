@@ -28,6 +28,23 @@ export function validateScript(script) {
       }
     }
 
+    if ("set" in cmd && !asObject(cmd.set)) {
+      errors.push(`[${i}] set はオブジェクトで指定してください。`);
+    }
+
+    if ("jumpIf" in cmd) {
+      if (!asObject(cmd.jumpIf)) {
+        errors.push(`[${i}] jumpIf はオブジェクトで指定してください。`);
+      } else {
+        if (typeof cmd.jumpIf.key !== "string" || cmd.jumpIf.key.length === 0) {
+          errors.push(`[${i}] jumpIf.key は空でない文字列で指定してください。`);
+        }
+        if (typeof cmd.jumpIf.to !== "string" || cmd.jumpIf.to.length === 0) {
+          errors.push(`[${i}] jumpIf.to は空でない文字列で指定してください。`);
+        }
+      }
+    }
+
     if ("choice" in cmd) {
       if (!Array.isArray(cmd.choice)) {
         errors.push(`[${i}] choice は配列で指定してください。`);
@@ -40,6 +57,10 @@ export function validateScript(script) {
 
           if (typeof choice.text !== "string" || choice.text.length === 0) {
             errors.push(`[${i}] choice[${choiceIndex}].text は必須の文字列です。`);
+          }
+
+          if ("set" in choice && !asObject(choice.set)) {
+            errors.push(`[${i}] choice[${choiceIndex}].set はオブジェクトで指定してください。`);
           }
         });
       }
@@ -56,7 +77,7 @@ export function validateScript(script) {
       errors.push(`[${i}] jump 先ラベル "${cmd.jump}" が未定義です。`);
     }
 
-    if (cmd.jumpIf && !isDefinedLabel(cmd.jumpIf.to)) {
+    if (asObject(cmd.jumpIf) && !isDefinedLabel(cmd.jumpIf.to)) {
       errors.push(`[${i}] jumpIf.to ラベル "${cmd.jumpIf.to}" が未定義です。`);
     }
 

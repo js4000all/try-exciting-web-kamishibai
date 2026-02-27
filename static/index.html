@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>紙芝居ノベル（最小）</title>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #game { height: 100%; display: grid; grid-template-rows: 1fr auto; background: #111; color: #fff; }
+    #stage { position: relative; overflow: hidden; }
+    #bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #2a2a2a, #0f0f0f);
+      background-size: cover; background-position: center;
+      filter: saturate(1.1);
+    }
+    .chara {
+      position: absolute; bottom: 0;
+      width: min(40vw, 360px);
+      height: min(70vh, 520px);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      backdrop-filter: blur(2px);
+      display: none;
+    }
+    #left { left: 6%; }
+    #right { right: 6%; }
+    #ui {
+      background: rgba(0,0,0,0.75);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding: 14px 14px 18px;
+    }
+    #name { font-weight: 700; margin-bottom: 8px; opacity: 0.9; }
+    #text { line-height: 1.8; min-height: 3.6em; }
+    #hint { margin-top: 10px; font-size: 12px; opacity: 0.6; }
+    #choices { margin-top: 12px; display: grid; gap: 10px; }
+    .choice {
+      text-align: left;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .choice:hover { background: rgba(255,255,255,0.12); }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="stage">
+      <div id="bg"></div>
+      <div id="left" class="chara" title="左立ち絵（画像を入れるならここ）"></div>
+      <div id="right" class="chara" title="右立ち絵（画像を入れるならここ）"></div>
+    </div>
+
+    <div id="ui">
+      <div id="name"></div>
+      <div id="text"></div>
+      <div id="choices"></div>
+      <div id="hint">クリックで進む（選択肢が出ている時はボタンを押す）</div>
+    </div>
+  </div>
+
+  <script>
+    // 画像を使うときは: { bg: "assets/bg_room.jpg" } みたいにURLを入れる
+    // 立ち絵も同様: { left: "assets/hero.png" } など
+    const script = [
+      { label: "start" },
+
+      { bgColor: "linear-gradient(135deg, #243B55, #141E30)" },
+      { leftOn: true, name: "？？？", text: "……起きてる？" },
+      { name: "あなた", text: "……ん、起きてる。", },
+
+      { text: "ここは“最小の紙芝居ノベル”。とりあえず動くやつ。" },
+
+      { choice: [
+          { text: "話しかける", set: { flag_talk: true }, jump: "talk" },
+          { text: "無視する", set: { flag_talk: false }, jump: "ignore" },
+        ]
+      },
+
+      { label: "talk" },
+      { name: "？？？", text: "よし。じゃあ、今日から冒険ね。" },
+      { text: "（フラグ flag_talk が立った）" },
+      { jumpIf: { key: "flag_talk", equals: true, to: "end" } },
+
+      { label: "ignore" },
+      { name: "？？？", text: "えっ、冷た……。", },
+      { text: "（フラグ flag_talk は false）" },
+
+      { label: "end" },
+      { rightOn: true, name: "ナレーション", text: "ここで終わり。続きはあなたの台本次第！" },
+    ];
+
+    const state = {
+      idx: 0,
+      labels: new Map(),
+      flags: {},
+    };
+
+    const elBg = document.getElementById("bg");
+    const elLeft = document.getElementById("left");
+    const elRight = document.getElementById("right");
+    const elName = document.getElementById("name");
+    const elText = document.getElementById("text");
+    const elChoices = document.getElementById("choices");
+
+    // ラベル位置を先に拾う
+    script.forEach((cmd, i) => {
+      if (cmd.label) state.labels.set(cmd.label, i);
+    });
+
+    function setBg(cmd) {
+      if (cmd.bg) {
+        elBg.style.backgroundImage = `url(${cmd.bg})`;
+        elBg.style.backgroundColor = "";
+      } else if (cmd.bgColor) {
+        elBg.style.backgroundImage = cmd.bgColor;
+        elBg.style.backgroundColor = "";
+      }
+    }
+
+    function setChara(el, on, url) {
+      el.style.display = on ? "block" : "none";
+      if (url) {
+        el.style.background = `center / contain no-repeat url(${url})`;
+        el.style.border = "none";
+      } else {
+        // 画像がない時は半透明ボックス
+        el.style.background = "rgba(255,255,255,0.08)";
+        el.style.border = "1px solid rgba(255,255,255,0.15)";
+      }
+    }
+
+    function clearChoices() {
+      elChoices.innerHTML = "";
+    }
+
+    function showChoices(choiceArr) {
+      clearChoices();
+      for (const c of choiceArr) {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = c.text;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          if (c.set) Object.assign(state.flags, c.set);
+          if (c.jump) jumpTo(c.jump);
+          next(); // ジャンプ先の次の命令へ
+        };
+        elChoices.appendChild(btn);
+      }
+    }
+
+    function jumpTo(label) {
+      const pos = state.labels.get(label);
+      if (pos == null) return;
+      state.idx = pos;
+    }
+
+    function apply(cmd) {
+      if (cmd.bg || cmd.bgColor) setBg(cmd);
+
+      if ("leftOn" in cmd || cmd.left) setChara(elLeft, !!cmd.leftOn, cmd.left);
+      if ("rightOn" in cmd || cmd.right) setChara(elRight, !!cmd.rightOn, cmd.right);
+
+      if ("name" in cmd) elName.textContent = cmd.name ?? "";
+      if ("text" in cmd) elText.textContent = cmd.text ?? "";
+
+      if (cmd.set) Object.assign(state.flags, cmd.set);
+
+      if (cmd.jumpIf) {
+        const { key, equals, to } = cmd.jumpIf;
+        if ((state.flags[key] ?? false) === equals) jumpTo(to);
+      }
+
+      if (cmd.choice) {
+        showChoices(cmd.choice);
+        return "WAIT_CHOICE";
+      }
+
+      if (cmd.jump) {
+        jumpTo(cmd.jump);
+      }
+
+      return "CONTINUE";
+    }
+
+    function next() {
+      clearChoices();
+
+      while (state.idx < script.length) {
+        const cmd = script[state.idx++];
+        if (cmd.label) continue; // ラベルは表示しない
+        const r = apply(cmd);
+        if (r === "WAIT_CHOICE") return;
+        // 表示系の命令は一旦止める
+        if ("text" in cmd || "name" in cmd) return;
+      }
+
+      elName.textContent = "";
+      elText.textContent = "（おしまい）";
+    }
+
+    // クリックで進行
+    document.getElementById("game").addEventListener("click", () => {
+      if (elChoices.childElementCount > 0) return; // 選択中は進めない
+      next();
+    });
+
+    // スタート
+    next();
+  </script>
+</body>
+</html>

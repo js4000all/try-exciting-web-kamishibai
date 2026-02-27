@@ -64,15 +64,28 @@
   </div>
 
   <script type="module">
-    import { createRuntime } from "./js/engine/runtime.js";
-    import { script } from "./js/scenarios/sample.js";
-
     const elBg = document.getElementById("bg");
     const elLeft = document.getElementById("left");
     const elRight = document.getElementById("right");
     const elName = document.getElementById("name");
     const elText = document.getElementById("text");
     const elChoices = document.getElementById("choices");
+
+    function showBootError(message) {
+      elName.textContent = "起動エラー";
+      elText.textContent = message;
+      elChoices.innerHTML = "";
+    }
+
+    if (location.protocol === "file:") {
+      showBootError("モジュール読み込みのため、ローカルサーバー経由で開いてください（例: python -m http.server）。");
+      throw new Error("Open this app via http(s), not file://");
+    }
+
+    const [{ createRuntime }, { script }] = await Promise.all([
+      import("./js/engine/runtime.js"),
+      import("./js/scenarios/sample.js"),
+    ]);
 
     function setChara(el, on, url) {
       el.style.display = on ? "block" : "none";

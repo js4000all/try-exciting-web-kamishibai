@@ -1,3 +1,4 @@
+import { parseScenarioScript } from "./parseScenario.js";
 import { validateScript } from "./validateScript.js";
 
 const STATUS = {
@@ -12,17 +13,15 @@ export function createRuntime({ script, renderer }) {
     throw new Error(`スクリプト検証エラー:\n${errors.join("\n")}`);
   }
 
+  const scenario = parseScenarioScript(script);
+
   const state = {
     idx: 0,
-    labels: new Map(),
+    labels: scenario.labels,
     flags: {},
     status: STATUS.CONTINUE,
     dialogue: { name: "", text: "" },
   };
-
-  script.forEach((cmd, i) => {
-    if (cmd.label) state.labels.set(cmd.label, i);
-  });
 
   function jumpTo(label) {
     const pos = state.labels.get(label);
@@ -30,36 +29,36 @@ export function createRuntime({ script, renderer }) {
     state.idx = pos;
   }
 
-  function updateDialogue(cmd) {
-    if ("name" in cmd) state.dialogue.name = cmd.name ?? "";
-    if ("text" in cmd) state.dialogue.text = cmd.text ?? "";
+  function applyAction(action) {
+    if (action.type === "BACKGROUND") {
+      renderer.setBackground(action);
+      return STATUS.CONTINUE;
+    }
 
-    if ("name" in cmd || "text" in cmd) {
+    if (action.type === "CHARACTER") {
+      renderer.setCharacter(action.side, { on: action.on, url: action.url });
+      return STATUS.CONTINUE;
+    }
+
+    if (action.type === "DIALOGUE") {
+      if (action.hasName) state.dialogue.name = action.name;
+      if (action.hasText) state.dialogue.text = action.text;
       renderer.setDialogue(state.dialogue);
-    }
-  }
-
-  function apply(cmd) {
-    if (cmd.bg || cmd.bgColor) renderer.setBackground(cmd);
-
-    if ("leftOn" in cmd || cmd.left) {
-      renderer.setCharacter("left", { on: !!cmd.leftOn, url: cmd.left });
-    }
-    if ("rightOn" in cmd || cmd.right) {
-      renderer.setCharacter("right", { on: !!cmd.rightOn, url: cmd.right });
+      return STATUS.CONTINUE;
     }
 
-    updateDialogue(cmd);
-
-    if (cmd.set) Object.assign(state.flags, cmd.set);
-
-    if (cmd.jumpIf) {
-      const { key, equals, to } = cmd.jumpIf;
-      if ((state.flags[key] ?? false) === equals) jumpTo(to);
+    if (action.type === "SET_FLAGS") {
+      Object.assign(state.flags, action.value);
+      return STATUS.CONTINUE;
     }
 
-    if (cmd.choice) {
-      renderer.showChoices(cmd.choice, (choice) => {
+    if (action.type === "JUMP_IF") {
+      if ((state.flags[action.key] ?? false) === action.equals) jumpTo(action.to);
+      return STATUS.CONTINUE;
+    }
+
+    if (action.type === "CHOICE") {
+      renderer.showChoices(action.options, (choice) => {
         if (choice.set) Object.assign(state.flags, choice.set);
         if (choice.jump) jumpTo(choice.jump);
         state.status = STATUS.CONTINUE;
@@ -69,7 +68,20 @@ export function createRuntime({ script, renderer }) {
       return STATUS.WAIT_CHOICE;
     }
 
-    if (cmd.jump) jumpTo(cmd.jump);
+    if (action.type === "JUMP") {
+      jumpTo(action.to);
+    }
+
+    return STATUS.CONTINUE;
+  }
+
+  function apply(instruction) {
+    if (instruction.type !== "STEP") return STATUS.CONTINUE;
+
+    for (const action of instruction.actions) {
+      const result = applyAction(action);
+      if (result === STATUS.WAIT_CHOICE) return STATUS.WAIT_CHOICE;
+    }
 
     return STATUS.CONTINUE;
   }
@@ -79,12 +91,12 @@ export function createRuntime({ script, renderer }) {
 
     renderer.showChoices([], () => {});
 
-    while (state.idx < script.length) {
-      const cmd = script[state.idx++];
-      if (cmd.label) continue;
-      const result = apply(cmd);
+    while (state.idx < scenario.instructions.length) {
+      const instruction = scenario.instructions[state.idx++];
+      if (instruction.type === "LABEL") continue;
+      const result = apply(instruction);
       if (result === STATUS.WAIT_CHOICE) return;
-      if ("text" in cmd || "name" in cmd) {
+      if (instruction.actions.some((action) => action.type === "DIALOGUE")) {
         state.status = STATUS.CONTINUE;
         return;
       }

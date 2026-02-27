@@ -48,7 +48,8 @@ python -m http.server 8000
     ├── index.html                    # renderer + 初期化
     └── js/
         ├── engine/
-        │   ├── runtime.js            # 進行制御
+        │   ├── parseScenario.js      # DSL -> 内部シナリオモデル変換
+        │   ├── runtime.js            # 進行制御（内部モデルを実行）
         │   └── validateScript.js     # 台本検証
         └── scenarios/sample.js       # 台本データ
 ```
@@ -56,7 +57,7 @@ python -m http.server 8000
 ## 2-2. 台本の基本
 
 `script` 配列の 1 要素が 1 コマンドです。
-`createRuntime` 初期化時に `validateScript` が実行され、仕様違反を起動前に検出します。
+`createRuntime` 初期化時に `validateScript` で台本を検証し、`parseScenarioScript` で内部シナリオモデルへ変換してから実行します。これにより将来 DSL 形式が変わっても、ランタイムは内部モデルを維持したまま差し替えできます。
 
 ### コマンドキー（必須 / 任意）
 
@@ -122,9 +123,10 @@ python -m http.server 8000
 
 機能追加時は、以下の責務分離を必ず守ってください。
 
-- `runtime`（進行制御）: どのコマンドをいつ実行し、状態遷移・分岐・ジャンプをどう行うか。
-- `renderer`（描画）: 実行結果を DOM にどう反映するか（背景・立ち絵・テキスト・選択肢 UI）。
 - `scenario`（データ）: 台本そのもの。命令データのみを持ち、描画ロジックを直接書かない。
+- `parseScenario`（パーサ）: DSL を内部シナリオモデルへ正規化する。
+- `runtime`（進行制御）: 内部モデルを実行し、状態遷移・分岐・ジャンプを制御する。
+- `renderer`（描画）: 実行結果を DOM にどう反映するか（背景・立ち絵・テキスト・選択肢 UI）。
 
 > 原則: 「進行制御」と「描画」と「データ」を混ぜない。将来的にファイル分割する場合もこの境界を維持すること。
 

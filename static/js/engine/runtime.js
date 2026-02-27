@@ -1,5 +1,11 @@
 import { validateScript } from "./validateScript.js";
 
+const STATUS = {
+  CONTINUE: "CONTINUE",
+  WAIT_CHOICE: "WAIT_CHOICE",
+  DONE: "DONE",
+};
+
 export function createRuntime({ script, renderer }) {
   const errors = validateScript(script);
   if (errors.length > 0) {
@@ -10,6 +16,8 @@ export function createRuntime({ script, renderer }) {
     idx: 0,
     labels: new Map(),
     flags: {},
+    status: STATUS.CONTINUE,
+    dialogue: { name: "", text: "" },
   };
 
   script.forEach((cmd, i) => {
@@ -22,6 +30,15 @@ export function createRuntime({ script, renderer }) {
     state.idx = pos;
   }
 
+  function updateDialogue(cmd) {
+    if ("name" in cmd) state.dialogue.name = cmd.name ?? "";
+    if ("text" in cmd) state.dialogue.text = cmd.text ?? "";
+
+    if ("name" in cmd || "text" in cmd) {
+      renderer.setDialogue(state.dialogue);
+    }
+  }
+
   function apply(cmd) {
     if (cmd.bg || cmd.bgColor) renderer.setBackground(cmd);
 
@@ -32,8 +49,7 @@ export function createRuntime({ script, renderer }) {
       renderer.setCharacter("right", { on: !!cmd.rightOn, url: cmd.right });
     }
 
-    if ("name" in cmd) renderer.setName(cmd.name ?? "");
-    if ("text" in cmd) renderer.setText(cmd.text ?? "");
+    updateDialogue(cmd);
 
     if (cmd.set) Object.assign(state.flags, cmd.set);
 
@@ -46,29 +62,38 @@ export function createRuntime({ script, renderer }) {
       renderer.showChoices(cmd.choice, (choice) => {
         if (choice.set) Object.assign(state.flags, choice.set);
         if (choice.jump) jumpTo(choice.jump);
+        state.status = STATUS.CONTINUE;
         next();
       });
-      return "WAIT_CHOICE";
+      state.status = STATUS.WAIT_CHOICE;
+      return STATUS.WAIT_CHOICE;
     }
 
     if (cmd.jump) jumpTo(cmd.jump);
 
-    return "CONTINUE";
+    return STATUS.CONTINUE;
   }
 
   function next() {
-    renderer.clearChoices();
+    if (state.status === STATUS.DONE) return;
+
+    renderer.showChoices([], () => {});
 
     while (state.idx < script.length) {
       const cmd = script[state.idx++];
       if (cmd.label) continue;
       const result = apply(cmd);
-      if (result === "WAIT_CHOICE") return;
-      if ("text" in cmd || "name" in cmd) return;
+      if (result === STATUS.WAIT_CHOICE) return;
+      if ("text" in cmd || "name" in cmd) {
+        state.status = STATUS.CONTINUE;
+        return;
+      }
     }
 
-    renderer.setName("");
-    renderer.setText("（おしまい）");
+    state.dialogue.name = "";
+    state.dialogue.text = "（おしまい）";
+    renderer.setDialogue(state.dialogue);
+    state.status = STATUS.DONE;
   }
 
   return {
@@ -78,5 +103,9 @@ export function createRuntime({ script, renderer }) {
     get state() {
       return state;
     },
+    get status() {
+      return state.status;
+    },
+    STATUS,
   };
 }

@@ -1,4 +1,11 @@
+import { validateScript } from "./validateScript.js";
+
 export function createRuntime({ script, renderer }) {
+  const errors = validateScript(script);
+  if (errors.length > 0) {
+    throw new Error(`スクリプト検証エラー:\n${errors.join("\n")}`);
+  }
+
   const state = {
     idx: 0,
     labels: new Map(),

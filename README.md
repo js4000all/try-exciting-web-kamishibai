@@ -10,10 +10,12 @@
 ├── README.md
 ├── LICENSE
 └── static/
-    ├── index.html             # renderer + 初期化
+    ├── index.html                    # renderer + 初期化
     └── js/
-        ├── engine/runtime.js  # 進行制御
-        └── scenarios/sample.js # 台本データ
+        ├── engine/
+        │   ├── runtime.js            # 進行制御
+        │   └── validateScript.js     # 台本検証
+        └── scenarios/sample.js       # 台本データ
 ```
 
 
@@ -29,26 +31,41 @@ python -m http.server 8000
 
 # コマンド仕様
 
-`static/index.html` の `script` 配列は、以下のようなコマンド（オブジェクト）で構成します。
+`script` 配列の 1 要素が 1 コマンドです。`createRuntime` 初期化時に `validateScript` が実行され、以下の仕様違反を検出します。
 
-- `label: string`  
-  ジャンプ先の目印を定義します（表示はしない）。
-- `name: string` / `text: string`  
-  発話者名と本文を表示します。
-- `bg: string` / `bgColor: string`  
-  背景画像 URL または CSS 背景指定を更新します。
-- `leftOn: boolean` / `rightOn: boolean`  
-  左右キャラクター表示の ON/OFF を切り替えます。
-- `left: string` / `right: string`  
-  左右キャラクター画像 URL を設定します。
-- `set: Record<string, any>`  
-  フラグ（状態）を更新します。
-- `jump: string`  
-  指定 `label` へジャンプします。
-- `jumpIf: { key: string; equals: any; to: string }`  
-  条件成立時のみ `to` の `label` へジャンプします。
-- `choice: Array<{ text: string; set?: object; jump?: string }>`  
-  選択肢を表示し、選択時に状態更新・ジャンプを行います。
+## コマンドキー（必須/任意）
+
+| コマンド | 必須キー | 任意キー | 説明 |
+| --- | --- | --- | --- |
+| `label` | `label: string` | - | ジャンプ先の目印を定義（表示はしない）。 |
+| 発話 | - | `name: string`, `text: string` | 発話者名と本文を表示。 |
+| 背景 | - | `bg: string`, `bgColor: string` | 背景画像 URL または CSS 背景指定を更新。 |
+| 立ち絵 | - | `leftOn: boolean`, `rightOn: boolean`, `left: string`, `right: string` | 左右キャラクターの表示/画像を更新。 |
+| フラグ更新 | - | `set: Record<string, any>` | 状態フラグを更新。 |
+| `jump` | `jump: string` | - | 指定 `label` へジャンプ。 |
+| `jumpIf` | `jumpIf.key`, `jumpIf.equals`, `jumpIf.to` | - | 条件成立時のみ `to` の `label` へジャンプ。 |
+| `choice` | `choice: Array<Choice>` | - | 選択肢を表示。 |
+| `Choice` | `text: string` | `set?: object`, `jump?: string` | 選択時に状態更新・ジャンプ。 |
+
+## 検証でチェックされる項目
+
+- `label` の重複（どの index と重複したかも表示）
+- `jump` / `jumpIf.to` / `choice[].jump` の未定義ラベル参照
+- `choice` が配列形式であること
+- `choice[].text` が必須で、空でない文字列であること
+
+## 検証エラーの読み方
+
+検証エラーには配列 index が `[...]` 形式で付きます。例:
+
+```text
+スクリプト検証エラー:
+[5] choice は配列で指定してください。
+[9] jumpIf.to ラベル "ending" が未定義です。
+```
+
+- `[5]` は `script[5]` のコマンドが不正という意味です。
+- 修正後に再読み込みすると、`createRuntime` が再検証して起動します。
 
 ## シナリオ作者向けサンプル（現行台本から抜粋）
 

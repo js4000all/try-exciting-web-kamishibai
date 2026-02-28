@@ -13,9 +13,9 @@
 
 ### 1.1 参照IDと実ファイルの対応
 - シナリオやAPIで扱う `id` は、上記固定ディレクトリ配下の相対パス（拡張子なし）を基本とする。
-  - 例: `bg` の `id: school/classroom_day` は `assets/bg/school/classroom_day.png` を指す。
-  - 例: `se` の `id: ui/click` は `assets/se/ui/click.ogg` を指す。
-- 実装側は対応拡張子（画像: `.png` 優先、音声: `.ogg` 優先）を順次解決してよい。
+  - 例: `bg` の `id: school/classroom_day` は `assets/bg/school/classroom_day.avif` を指す。
+  - 例: `se` の `id: ui/click` は `assets/se/ui/click.opus` を指す。
+- 実装側は対応拡張子（画像: `.avif` 優先、音声: `.opus` 優先）を順次解決してよい。
 
 ## 2. 命名規則と解像度ガイドライン
 
@@ -27,10 +27,10 @@
 - 理由: OS差分やURLエンコード問題を避け、シナリオ記述とファイル名の対応を単純化するため。
 
 例:
-- `assets/bg/school/classroom_day.png`
-- `assets/ch/hero/hero_happy.png`
-- `assets/se/ui/cursor_move.ogg`
-- `assets/bgm/scene/morning_theme.ogg`
+- `assets/bg/school/classroom_day.avif`
+- `assets/ch/hero/hero_happy.avif`
+- `assets/se/ui/cursor_move.opus`
+- `assets/bgm/scene/morning_theme.opus`
 
 > 既存資産がケバブケース（`kebab-case`）の場合、移行期間は許容するが、新規追加は `snake_case` に統一する。
 
@@ -39,15 +39,15 @@
 ### 背景（`assets/bg`）
 - 基準解像度: **1920x1080**（16:9）
 - 最低解像度: 1280x720
-- 形式: PNG（可逆圧縮）
+- 形式: AVIF（可逆/高圧縮）
 
 ### 立ち絵（`assets/ch`）
 - 基準高さ: **1600px 前後**（幅はキャラに応じて可変）
-- 透過必須（PNG）
+- 透過対応形式必須（AVIF もしくは PNG）
 - 同キャラの表情差分は同一キャンバスサイズを推奨（表示揺れ防止）
 
 ### 音声（`assets/se`, `assets/bgm`）
-- 推奨形式: OGG Vorbis
+- 推奨形式: Opus
 - 推奨サンプルレート: 44.1kHz または 48kHz
 - SE は短尺・低遅延重視、BGM はループ境界が自然につながる素材を推奨
 

@@ -1,112 +1,83 @@
-# ARCHITECTURE
+# シンプルなビジュアルノベルエンジン（Python API + SPA）
 
-このドキュメントは、AI エージェントが `app-image-view-webui` の構成を短時間で把握し、変更影響を見積もるためのガイドです。
+本ドキュメントは、現プロダクトを **シンプルなビジュアルノベルエンジン**として実装・拡張するためのアーキテクチャ基準を定義する。
+特に、Python 側の実行機（インタプリタ）と React 側の描画レイヤーを明確に分離し、再現性の高い開発・運用を行うことを目的とする。
 
 ## 技術スタック
 
 - **Backend**: Python, FastAPI, Uvicorn
 - **Frontend (Home/Viewer画面)**: React + TypeScript + Vite
 - **テスト**: pytest（API / E2E）
-- **配信方式**:
-  - `/` は `static/home-app/index.html`（Reactビルド成果物）を配信
-  - `/viewer` も同一の `static/home-app/index.html`（SPA）を配信
-  - `/api/*` は FastAPI の JSON API
 
----
+## 1. スコープと設計方針
 
-## 全体ディレクトリ構成（要点）
+- サーバは Python API として、プロジェクト管理・シナリオ供給・アセット配信・セーブ保存を担う。
+- クライアントは SPA（React）として、サーバ API とセーブデータを利用して画面描画と入力受付を担う。
+- シナリオ解釈（分岐・進行管理）は実行機の責務、UI 表示は描画レイヤーの責務とし、相互に責務を越境させない。
 
-- `app/`: FastAPI アプリ本体
-  - `main.py`: ルート定義とアプリ組み立て
-  - `api/routes.py`: API エンドポイント
-  - `services/`: ユースケースロジック
-  - `repositories/`: ファイルシステムアクセス
-  - `models/`: API 入出力スキーマ
-- `frontend/`: React + TypeScript の画面ソース
-  - `src/features/home/`: ホーム画面の機能単位モジュール
-  - `src/features/viewer/`: 閲覧画面の機能単位モジュール
-- `static/`: 配信される静的ファイル
-  - `home-app/`: SPA の React ビルド成果物
-  - `styles.css`: 共通スタイル
-- `tests/`: API / E2E テスト
-- `docs/`: 運用・設計ドキュメント
+## 2. モノレポ正式構成
 
----
+本リポジトリは以下を正式なルート構成とする。
 
-## Frontend（ホーム画面）の構成方針
+- `server/`: Python API と実行機（インタプリタ）
+- `web/`: React SPA（描画レイヤー）
+- `shared/`: 共有スキーマ・型・規約ドキュメント（言語横断）
+- `docs/`: 設計・運用・開発手順
 
-ホーム画面は「**機能単位（feature-first）**」で分割しています。
+## 3. 責務分離（実行機 vs 描画レイヤー）
 
-- `frontend/src/App.tsx`
-  - エントリーポイントから呼ばれる薄いルートコンポーネント
-- `frontend/src/features/home/pages/HomePage.tsx`
-  - 画面全体のレイアウトとユースケース結合（再読み込み、名前変更後の更新）
-- `frontend/src/features/home/components/SubdirectoryCard.tsx`
-  - ディレクトリ1件分の表示と rename 操作
-- `frontend/src/features/home/hooks/useSubdirectories.ts`
-  - サブディレクトリ一覧の取得状態管理（loading/status）
-- `frontend/src/features/home/hooks/useSubdirectoryThumbnails.ts`
-  - サムネイル遅延読み込み（IntersectionObserver）
-- `frontend/src/features/home/api/homeApi.ts`
-  - ホーム画面で使う API 呼び出し
-- `frontend/src/api/http.ts`
-  - 汎用 HTTP ヘルパー
-- `frontend/src/types/home.ts`
-  - ホーム画面関連型
+### 3.1 実行機（Interpreter / Engine, `server/`）
 
-この分割により、`App.tsx` への責務集中を避け、画面ロジック・表示・通信を独立して変更できます。
+- シナリオ形式 v0 を読み込み、現在ノード・状態遷移・choice 分岐を評価する。
+- セーブデータの読み書きを行い、復元可能な進行状態を保証する。
+- アセット参照規約に沿って、必要なアセットを解決し配信可能な形にする。
+- API 契約（v0）に従い、プロジェクト/シナリオ/セーブ関連の入出力を提供する。
 
----
+### 3.2 描画レイヤー（Renderer / UI, `web/`）
 
-## Backend の責務分離
+- API から取得したシナリオ状態を画面に描画する。
+- テキスト、立ち絵、背景、選択肢などの表示とユーザー入力を処理する。
+- UI 状態（ローディング、エラー、遷移中表示）を管理する。
+- シナリオ進行ロジックを独自実装せず、実行機の結果を表示することに徹する。
 
-- `routes.py`: HTTP の入出力責務（リクエスト・レスポンス）
-- `services/`: 業務ルール（ディレクトリや画像一覧の取得、検証）
-- `repositories/filesystem.py`: OS ファイル操作の詳細
+## 4. データ規約の参照先
 
-変更時は、原則として上位レイヤーから下位レイヤーへの依存方向を維持してください。
+以下の規約は `shared/` 配下に定義し、本ドキュメントから参照する。
 
----
+- シナリオ形式 v0: `shared/specs/scenario-format-v0.md`
+- セーブデータ仕様: `shared/specs/save-data-v0.md`
+- アセット参照規約: `shared/specs/asset-reference.md`
 
-## 変更時の実務ルール（AIエージェント向け）
+## 5. API v0 一覧
 
-1. **まず回帰防止**: 一覧表示と viewer 遷移の基本導線を壊さない。
-2. **最小差分**: 無関係な整形や命名変更を混ぜない。
-3. **成果物更新**: `frontend` 変更時はビルドし、`static/home-app/` の成果物差分も確認する。
-4. **検証を記録**: 実行コマンドと結果を `docs/agent-handoff/tasks/*.md` に残す。
+API v0 では以下を提供対象とする。
 
----
+- プロジェクト一覧取得
+  - `GET /api/v0/projects`
+- プロジェクト単体取得
+  - `GET /api/v0/projects/{project_id}`
+- シナリオ取得
+  - `GET /api/v0/projects/{project_id}/scenario`
+- アセット配信
+  - `GET /api/v0/assets/{asset_path}`
+- セーブ保存
+  - `PUT /api/v0/projects/{project_id}/saves/{slot}`
 
-## よく使うコマンド
+## 6. 開発コマンド（ワンコマンド起動前提）
 
-### アプリ起動
+現時点のリポジトリには、アプリ起動・ビルド・テストを実行するための専用コマンド（例: `make dev`, `npm run dev`, `uvicorn ...` など）は未定義である。
+そのため、本節では存在確認済みのコマンドのみを記載する。
 
-```sh
-python app.py tests/resources/image_root
-```
+- リポジトリ状態確認
+  - `git status`
 
-### フロントエンドビルド
+> 実装追加時は、`server/` と `web/` を同時起動できるワンコマンド（例: `make dev`）を導入し、本節を更新すること。
 
-```sh
-cd frontend
-npm ci
-npm run build:bundle
-```
+## 7. 受け入れ基準
 
-### テスト
+以下を満たした変更を受け入れ可能とする。
 
-依存関係を未インストールの状態で `pytest` を実行すると失敗するため、先に開発用依存を導入してください。
-
-```sh
-python -m pip install -r requirements-dev.txt
-pytest -q
-```
-
-E2E（`tests/e2e`）を実行する場合は、ブラウザ実体を先に導入してください。
-
-```sh
-python -m pip install -r requirements-dev.txt
-python -m playwright install --with-deps chromium
-pytest tests/e2e -q
-```
-
+- **再現性**: 同一入力シナリオと同一セーブデータから、同一の進行結果を再現できる。
+- **型整合**: `shared/` の契約（型・スキーマ）と `server/` / `web/` の入出力が矛盾しない。
+- **choice 分岐**: 選択肢による分岐が仕様どおり遷移し、セーブ/ロード後も整合する。
+- **CI バリデーション**: 主要チェック（型検査・テスト・必要なビルド）が CI で自動検証される。

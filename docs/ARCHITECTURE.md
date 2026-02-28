@@ -6,7 +6,7 @@
 ## 技術スタック
 
 - **Backend**: Python, FastAPI, Uvicorn
-- **Frontend (Home/Viewer画面)**: React + TypeScript + Vite
+- **Frontend**: React + TypeScript + Vite
 - **テスト**: pytest（API / E2E）
 
 ## 1. スコープと設計方針

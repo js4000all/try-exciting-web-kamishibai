@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/kamishibai/scenario-v0.schema.json",
+  "title": "Scenario v0",
+  "type": "object",
+  "required": ["id", "nodes"],
+  "properties": {
+    "id": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -47,21 +47,21 @@
 - シナリオ形式 v0: `shared/specs/scenario-format-v0.md`
 - セーブデータ仕様: `shared/specs/save-data-v0.md`
 - アセット参照規約: `shared/specs/asset-reference.md`
+- API設計 v0 固定版: `docs/API_V0.md`
 
 ## 5. API v0 一覧
 
-API v0 では以下を提供対象とする。
+API v0 の固定仕様は `docs/API_V0.md` を正とする。
 
-- プロジェクト一覧取得
-  - `GET /api/v0/projects`
-- プロジェクト単体取得
-  - `GET /api/v0/projects/{project_id}`
-- シナリオ取得
-  - `GET /api/v0/projects/{project_id}/scenario`
-- アセット配信
-  - `GET /api/v0/assets/{asset_path}`
-- セーブ保存
-  - `PUT /api/v0/projects/{project_id}/saves/{slot}`
+実装対象（最小セット）は以下。
+
+- `GET /api/v0/projects`
+- `GET /api/v0/projects/{project_id}`
+- `GET /api/v0/projects/{project_id}/scenario/chapters/{chapter_id}`
+- `GET /api/v0/projects/{project_id}/scenario/files/{file_path}`
+- `GET /api/v0/assets/{project_id}/{asset_path}`
+- `PUT /api/v0/projects/{project_id}/saves/{slot}`
+- `GET /api/v0/projects/{project_id}/saves/{slot}`
 
 ## 6. 開発コマンド（ワンコマンド起動前提）
 

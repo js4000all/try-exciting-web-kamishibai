@@ -1,0 +1,6 @@
+{
+  "id": "main_story",
+  "nodes": [
+    {"label": "intro", "commands": []}
+  ]
+}

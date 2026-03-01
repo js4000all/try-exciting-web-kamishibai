@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/kamishibai/save-data-v0.schema.json",
+  "title": "Save Data v0",
+  "type": "object",
+  "required": [
+    "state_version",
+    "scenario_ref",
+    "position",
+    "variables",
+    "read_history",
+    "log",
+    "choice_results",
+    "rng"
+  ],
+  "properties": {
+    "state_version": {
+      "type": "string",
+      "const": "0"
+    },
+    "scenario_ref": {
+      "type": "object",
+      "required": ["name", "revision", "checksum"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "checksum": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "position": {
+      "type": "object",
+      "required": ["label", "index"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "index": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "variables": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    },
+    "read_history": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^.+#[0-9]+$"
+      },
+      "uniqueItems": true
+    },
+    "log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["seq", "kind", "payload"],
+        "properties": {
+          "seq": { "type": "integer", "minimum": 0 },
+          "kind": { "type": "string", "minLength": 1 },
+          "payload": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "choice_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "choice_id", "selected_index"],
+        "properties": {
+          "at": {
+            "type": "string",
+            "pattern": "^.+#[0-9]+$"
+          },
+          "choice_id": { "type": "string", "minLength": 1 },
+          "selected_index": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rng": {
+      "type": "object",
+      "required": ["seed", "step"],
+      "properties": {
+        "seed": { "type": "string", "minLength": 1 },
+        "step": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

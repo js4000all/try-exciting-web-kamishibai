@@ -37,11 +37,19 @@ log_start "${current_step}"
 )
 log_done "${current_step}"
 
-current_step="web: API 型生成 (npm run gen:api-types)"
+current_step="server: Shared schema validate (kamishibai-validate-shared-schema)"
+log_start "${current_step}"
+(
+  cd server
+  kamishibai-validate-shared-schema
+)
+log_done "${current_step}"
+
+current_step="web: 型生成 (npm run gen:types)"
 log_start "${current_step}"
 (
   cd web
-  npm run gen:api-types
+  npm run gen:types
 )
 log_done "${current_step}"
 
@@ -51,6 +59,11 @@ log_start "${current_step}"
   cd web
   npm run type-check
 )
+log_done "${current_step}"
+
+current_step="generated artifacts: 差分チェック"
+log_start "${current_step}"
+git diff --exit-code -- shared/schema/openapi.json web/src/types/schema.d.ts web/src/types/scenario-schema.d.ts web/src/types/save-data-schema.d.ts
 log_done "${current_step}"
 
 echo "[DONE] sync-and-check.sh が正常終了しました"

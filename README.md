@@ -13,6 +13,17 @@ v0 前提のモノレポ構成です。
 
 > v0 では `server/`, `web/`, `shared/` を必須ディレクトリとして扱います。
 
+## AIエージェント向けルール（重要）
+
+このリポジトリでAIエージェントがPRを作る場合は、`docs/AGENT_RULES.md` を必ず確認してください。
+特に以下は必須です。
+
+- PRは1つの意図だけを含める（Single Responsibility）。
+- PRタイトルは `<type>: <short description>` 形式にする。
+- typeは `feat|fix|refactor|test|infra|docs|chore` のみを使う。
+
+詳細ルールは `docs/AGENT_RULES.md` を正とします。
+
 ## 読者ごとの requirements
 
 ### エンドユーザー
@@ -65,14 +76,14 @@ python tools/scenario_linter.py ../examples/scenario.json
 ```bash
 cd web
 npm install
-npm run gen:api-types
+npm run gen:types
 npm run type-check
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-`web/src/types/` は OpenAPI 由来の型定義を配置する専用ディレクトリです。生成物は `web/src/types/schema.d.ts` に集約し、`npm run gen:api-types` で再生成してください。
+`web/src/types/` は API と共有スキーマの生成型を配置するディレクトリです。`npm run gen:types` で `schema.d.ts`（OpenAPI）と `scenario-schema.d.ts` / `save-data-schema.d.ts`（JSON Schema）を再生成してください。
 
-型定義生成物（`web/src/types/schema.d.ts`）は **コミット管理** します。OpenAPI 変更時は `npm run gen:api-types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
+型定義生成物（`web/src/types/*.d.ts`）は **コミット管理** します。スキーマ変更時は `npm run gen:types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
 
 ## エンジン開発者向け（CI 手順）
 
@@ -89,7 +100,7 @@ pytest
 # Web ビルド
 cd ../web
 npm install
-npm run gen:api-types
+npm run gen:types
 npm run type-check
 npm run build
 ```
@@ -99,6 +110,7 @@ npm run build
 1. Python セットアップ + `pip install -e .[dev]`
 2. `pytest`
 3. Node セットアップ + `npm ci`
-4. `npm run gen:api-types`
+4. `npm run gen:types`
 5. `npm run type-check`
 6. `npm run build`
+7. `./sync-and-check.sh`（型同期を含む統合チェック）

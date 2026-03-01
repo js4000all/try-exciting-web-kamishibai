@@ -1,0 +1,30 @@
+{
+  "state_version": "0",
+  "scenario_ref": {
+    "name": "main_story",
+    "revision": "git:1d73725",
+    "checksum": "3e7d6a6b9f9fca145f0f7f8fcbeb2ccac0e8a9df68ad5e8f6f2d7552edce2a00"
+  },
+  "position": {
+    "label": "intro",
+    "index": 3
+  },
+  "variables": {
+    "player_name": "Aoi",
+    "affinity": 12,
+    "met_guide": true,
+    "last_seen": null
+  },
+  "read_history": ["intro#0", "intro#1", "intro#2"],
+  "log": [
+    {"seq": 0, "kind": "line", "payload": {"text": "ようこそ"}},
+    {"seq": 1, "kind": "choice", "payload": {"id": "c_intro_1"}}
+  ],
+  "choice_results": [
+    {"at": "intro#2", "choice_id": "c_intro_1", "selected_index": 0}
+  ],
+  "rng": {
+    "seed": "project-1-slot-2-20250101",
+    "step": 14
+  }
+}

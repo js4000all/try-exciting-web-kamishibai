@@ -5,10 +5,56 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export type Command = LabelCommand | SayCommand | ChoiceCommand | JumpCommand | SetCommand | IfCommand;
+export type SetOp = "assign" | "add" | "sub";
+export type SetValue = string | number | boolean | null;
+
 export interface ScenarioV0 {
   id: string;
-  nodes: {
-    [k: string]: unknown;
-  }[];
-  [k: string]: unknown;
+  /**
+   * @minItems 1
+   */
+  nodes: [Command, ...Command[]];
+}
+export interface LabelCommand {
+  type: "label";
+  name: string;
+}
+export interface SayCommand {
+  type: "say";
+  speaker?: string;
+  text: string;
+}
+export interface ChoiceCommand {
+  type: "choice";
+  prompt?: string;
+  /**
+   * @minItems 1
+   */
+  options: [ChoiceOption, ...ChoiceOption[]];
+}
+export interface ChoiceOption {
+  text: string;
+  jump: string;
+}
+export interface JumpCommand {
+  type: "jump";
+  to: string;
+}
+export interface SetCommand {
+  type: "set";
+  var: string;
+  op?: SetOp;
+  value: SetValue;
+}
+export interface IfCommand {
+  type: "if";
+  cond: Condition;
+  then: Command[];
+  else?: Command[];
+}
+export interface Condition {
+  var: string;
+  op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+  value: SetValue;
 }

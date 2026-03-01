@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from app.data import PROJECTS, SAVES
+from app.errors import ResourceNotFoundError
 
 router = APIRouter(prefix="/projects/{project_id}/saves", tags=["saves"])
 
@@ -88,7 +89,7 @@ class SaveReadResponse(BaseModel):
 @router.put("/{slot}", response_model=SaveWriteResponse)
 def put_save(project_id: str, slot: str, payload: SaveDataV0) -> SaveWriteResponse:
     if project_id not in PROJECTS:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise ResourceNotFoundError("Project not found")
 
     project_saves = SAVES.setdefault(project_id, {})
     saved_at = datetime.now(timezone.utc)
@@ -99,11 +100,11 @@ def put_save(project_id: str, slot: str, payload: SaveDataV0) -> SaveWriteRespon
 @router.get("/{slot}", response_model=SaveReadResponse)
 def get_save(project_id: str, slot: str) -> SaveReadResponse:
     if project_id not in PROJECTS:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise ResourceNotFoundError("Project not found")
 
     slot_data = SAVES.get(project_id, {}).get(slot)
     if slot_data is None:
-        raise HTTPException(status_code=404, detail="Save slot not found")
+        raise ResourceNotFoundError("Save slot not found")
 
     return SaveReadResponse(
         project_id=project_id,

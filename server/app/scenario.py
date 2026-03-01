@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.data import PROJECTS, SCENARIOS
+from app.errors import ResourceNotFoundError
 
 router = APIRouter(prefix="/projects/{project_id}/scenario", tags=["scenario"])
 
@@ -27,11 +28,11 @@ class ChapterScenarioResponse(BaseModel):
 @router.get("/chapters/{chapter_id}", response_model=ChapterScenarioResponse)
 def get_chapter_scenario(project_id: str, chapter_id: str) -> ChapterScenarioResponse:
     if project_id not in PROJECTS:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise ResourceNotFoundError("Project not found")
 
     chapter_scenario = SCENARIOS.get(project_id, {}).get(chapter_id)
     if chapter_scenario is None:
-        raise HTTPException(status_code=404, detail="Chapter not found")
+        raise ResourceNotFoundError("Chapter not found")
 
     return ChapterScenarioResponse(
         project_id=project_id,

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.data import PROJECTS
+from app.errors import ResourceNotFoundError
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -42,7 +43,7 @@ def get_projects() -> ProjectListResponse:
 def get_project(project_id: str) -> ProjectDetailResponse:
     project = PROJECTS.get(project_id)
     if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise ResourceNotFoundError("Project not found")
 
     return ProjectDetailResponse(
         **project,

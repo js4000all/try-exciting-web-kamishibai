@@ -63,7 +63,7 @@ log_done "${current_step}"
 
 current_step="generated artifacts: 差分チェック"
 log_start "${current_step}"
-git diff --exit-code -- shared/schema/openapi.json web/src/types/schema.d.ts web/src/types/scenario-schema.d.ts web/src/types/save-data-schema.d.ts
+git diff --exit-code -- shared/schema/openapi.json web/src/types/schema.d.ts
 log_done "${current_step}"
 
 echo "[DONE] sync-and-check.sh が正常終了しました"

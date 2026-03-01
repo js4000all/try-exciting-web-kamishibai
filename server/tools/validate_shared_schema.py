@@ -1,4 +1,4 @@
-"""Validate shared JSON Schemas and fixture data for server/web type synchronization."""
+"""Validate server-local JSON Schemas and fixture data."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = REPO_ROOT / "shared" / "schema"
+SCHEMA_DIR = REPO_ROOT / "server" / "schema"
 
 TARGETS = [
     (

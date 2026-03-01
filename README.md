@@ -81,15 +81,18 @@ npm run type-check
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-`web/src/types/` は API 生成型を配置するディレクトリです。`npm run gen:types` で `schema.d.ts`（OpenAPI）を再生成してください。
+`web/src/types/` は API 生成型を配置するディレクトリです。`npm run gen:types` で `schema.d.ts`（OpenAPI）と API クライアント（`web/src/api/generated/`）を再生成してください。
 
-型定義生成物（`web/src/types/schema.d.ts`）は **コミット管理** します。OpenAPI 変更時は `npm run gen:types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
+生成物（`web/src/types/schema.d.ts`, `web/src/api/generated/`）は **コミット管理** します。OpenAPI 変更時は `npm run gen:types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
 
 ## エンジン開発者向け（CI 手順）
 
 ローカルで CI 相当のテスト・ビルドを行う最小手順です。
 
 API/モデル変更時は、リポジトリルートで必ず `./sync-and-check.sh` を実行してください。
+
+- `./sync-and-check.sh` : ローカル最終確認（pytest + OpenAPI/スキーマ検証 + SPA型/クライアント生成 + type-check + 生成物差分確認）
+- `./sync-and-check.sh --mode=contract` : 契約同期の軽量確認（OpenAPI/スキーマ検証 + SPA型/クライアント生成 + 生成物差分確認）
 
 ```bash
 # API テスト

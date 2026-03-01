@@ -77,9 +77,9 @@ API v0 の固定仕様は `docs/API_V0.md` を正とする。
 
 以下を満たした変更を受け入れ可能とする。
 
-- **契約管理方式**: SPA は `shared/schema/openapi.json` を API 契約の正として参照する。シナリオ/セーブデータの内部スキーマは `server/schema/*.schema.json` を正として管理する。
+- **契約管理方式**: FastAPI 実装から `shared/schema/openapi.json` を自動生成し、SPA はこの OpenAPI から型定義 (`web/src/types/schema.d.ts`) と API クライアント (`web/src/api/generated/`) を自動生成して利用する。シナリオ/セーブデータの内部スキーマは `server/schema/*.schema.json` を正として管理する。
 - **CI 契約整合コマンド**: `./sync-and-check.sh` を CI の契約整合チェックの単一コマンドとして実行する。
-- **検出基準**: OpenAPI/型生成物の差分が未コミットの場合、生成物差分チェックで CI が失敗する。
+- **検出基準**: OpenAPI/SPA 生成物（型定義・API クライアント）の差分が未コミットの場合、生成物差分チェックで CI が失敗する。
 
 - **再現性**: 同一入力シナリオと同一セーブデータから、同一の進行結果を再現できる。
 - **型整合**: `shared/` の契約（型・スキーマ）と `server/` / `web/` の入出力が矛盾しない。

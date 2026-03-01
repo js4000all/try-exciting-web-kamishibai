@@ -45,5 +45,5 @@ jobs:
           cd web
           npm ci
 
-      - name: Run sync and check
-        run: ./sync-and-check.sh
+      - name: Run contract sync check
+        run: ./sync-and-check.sh --mode=contract

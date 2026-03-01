@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+mode="full"
+if [[ "${1:-}" == "--mode=contract" ]]; then
+  mode="contract"
+fi
+
 current_step="初期化"
 
 on_error() {
@@ -21,13 +26,15 @@ log_done() {
   echo "[DONE] ${step}"
 }
 
-current_step="server: pytest"
-log_start "${current_step}"
-(
-  cd server
-  pytest
-)
-log_done "${current_step}"
+if [[ "${mode}" == "full" ]]; then
+  current_step="server: pytest"
+  log_start "${current_step}"
+  (
+    cd server
+    pytest
+  )
+  log_done "${current_step}"
+fi
 
 current_step="server: OpenAPI export (kamishibai-export-openapi)"
 log_start "${current_step}"
@@ -45,7 +52,7 @@ log_start "${current_step}"
 )
 log_done "${current_step}"
 
-current_step="web: 型生成 (npm run gen:types)"
+current_step="web: 型生成 + APIクライアント生成 (npm run gen:types)"
 log_start "${current_step}"
 (
   cd web
@@ -53,17 +60,19 @@ log_start "${current_step}"
 )
 log_done "${current_step}"
 
-current_step="web: TypeScript 型チェック (npm run type-check)"
-log_start "${current_step}"
-(
-  cd web
-  npm run type-check
-)
-log_done "${current_step}"
+if [[ "${mode}" == "full" ]]; then
+  current_step="web: TypeScript 型チェック (npm run type-check)"
+  log_start "${current_step}"
+  (
+    cd web
+    npm run type-check
+  )
+  log_done "${current_step}"
+fi
 
 current_step="generated artifacts: 差分チェック"
 log_start "${current_step}"
-git diff --exit-code -- shared/schema/openapi.json web/src/types/schema.d.ts
+git diff --exit-code -- shared/schema/openapi.json web/src/types/schema.d.ts web/src/api/generated
 log_done "${current_step}"
 
-echo "[DONE] sync-and-check.sh が正常終了しました"
+echo "[DONE] sync-and-check.sh が正常終了しました (mode=${mode})"

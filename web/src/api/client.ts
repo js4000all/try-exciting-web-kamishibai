@@ -1,13 +1,13 @@
-import type { components } from "../types/schema";
-
-const API_BASE = "/api/v0";
-
-type ProjectListResponse = components["schemas"]["ProjectListResponse"];
-type ProjectDetailResponse = components["schemas"]["ProjectDetailResponse"];
-type ChapterScenarioResponse = components["schemas"]["ChapterScenarioResponse"];
-type SaveDataV0 = components["schemas"]["SaveDataV0"];
-type SaveReadResponse = components["schemas"]["SaveReadResponse"];
-type SaveWriteResponse = components["schemas"]["SaveWriteResponse"];
+import type { ChapterScenarioResponse } from "./generated/models/ChapterScenarioResponse";
+import type { ProjectDetailResponse } from "./generated/models/ProjectDetailResponse";
+import type { ProjectListResponse } from "./generated/models/ProjectListResponse";
+import type { SaveDataV0 } from "./generated/models/SaveDataV0";
+import type { SaveReadResponse } from "./generated/models/SaveReadResponse";
+import type { SaveWriteResponse } from "./generated/models/SaveWriteResponse";
+import { ApiError as GeneratedApiError } from "./generated/core/ApiError";
+import { ProjectsService } from "./generated/services/ProjectsService";
+import { SavesService } from "./generated/services/SavesService";
+import { ScenarioService } from "./generated/services/ScenarioService";
 
 type ErrorEnvelope = {
   error: {
@@ -34,39 +34,6 @@ export class ApiError extends Error {
   }
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  const body = (await response.json()) as T | ErrorEnvelope;
-
-  if (!response.ok) {
-    if (isErrorEnvelope(body)) {
-      throw new ApiError({
-        status: response.status,
-        code: body.error.code,
-        message: body.error.message,
-        detail: body.error.detail,
-        requestId: body.error.request_id,
-      });
-    }
-    throw new ApiError({
-      status: response.status,
-      code: "HTTP_ERROR",
-      message: `Request failed: ${response.status}`,
-      detail: body,
-      requestId: "",
-    });
-  }
-
-  return body as T;
-}
-
 function isErrorEnvelope(value: unknown): value is ErrorEnvelope {
   if (typeof value !== "object" || value === null || !("error" in value)) {
     return false;
@@ -76,17 +43,73 @@ function isErrorEnvelope(value: unknown): value is ErrorEnvelope {
   return typeof error === "object" && error !== null && "code" in error && "message" in error;
 }
 
+function toApiError(error: unknown): ApiError {
+  if (error instanceof GeneratedApiError) {
+    const body = error.body;
+    if (isErrorEnvelope(body)) {
+      return new ApiError({
+        status: error.status,
+        code: body.error.code,
+        message: body.error.message,
+        detail: body.error.detail,
+        requestId: body.error.request_id,
+      });
+    }
+
+    return new ApiError({
+      status: error.status,
+      code: "HTTP_ERROR",
+      message: `Request failed: ${error.status}`,
+      detail: body,
+      requestId: "",
+    });
+  }
+
+  return new ApiError({
+    status: 0,
+    code: "NETWORK_ERROR",
+    message: error instanceof Error ? error.message : "Unexpected network error",
+    detail: error,
+    requestId: "",
+  });
+}
+
 export const apiClient = {
-  getProjects: () => requestJson<ProjectListResponse>("/projects"),
-  getProject: (projectId: string) => requestJson<ProjectDetailResponse>(`/projects/${projectId}`),
-  getChapterScenario: (projectId: string, chapterId: string) =>
-    requestJson<ChapterScenarioResponse>(`/projects/${projectId}/scenario/chapters/${chapterId}`),
-  save: (projectId: string, slot: string, data: SaveDataV0) =>
-    requestJson<SaveWriteResponse>(`/projects/${projectId}/saves/${slot}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  load: (projectId: string, slot: string) => requestJson<SaveReadResponse>(`/projects/${projectId}/saves/${slot}`),
+  getProjects: async () => {
+    try {
+      return await ProjectsService.getProjectsApiV0ProjectsGet();
+    } catch (error) {
+      throw toApiError(error);
+    }
+  },
+  getProject: async (projectId: string) => {
+    try {
+      return await ProjectsService.getProjectApiV0ProjectsProjectIdGet(projectId);
+    } catch (error) {
+      throw toApiError(error);
+    }
+  },
+  getChapterScenario: async (projectId: string, chapterId: string) => {
+    try {
+      return await ScenarioService.getChapterScenarioApiV0ProjectsProjectIdScenarioChaptersChapterIdGet(projectId, chapterId);
+    } catch (error) {
+      throw toApiError(error);
+    }
+  },
+  save: async (projectId: string, slot: string, data: SaveDataV0) => {
+    try {
+      return await SavesService.putSaveApiV0ProjectsProjectIdSavesSlotPut(projectId, slot, data);
+    } catch (error) {
+      throw toApiError(error);
+    }
+  },
+  load: async (projectId: string, slot: string) => {
+    try {
+      return await SavesService.getSaveApiV0ProjectsProjectIdSavesSlotGet(projectId, slot);
+    } catch (error) {
+      throw toApiError(error);
+    }
+  },
 };
 
 export type { ChapterScenarioResponse, ProjectDetailResponse, ProjectListResponse, SaveDataV0, SaveReadResponse, SaveWriteResponse };

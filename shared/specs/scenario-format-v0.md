@@ -1,6 +1,6 @@
 # Scenario Format v0
 
-この文書は `shared/schema/scenario-v0.schema.json` の補助説明です。**実装契約は常に JSON Schema を正**とし、ここでは v0 で採用する最小命令セット（`say` / `choice` / `jump` / `set` / `if` / `label`）を読みやすく要約します。
+この文書は `server/schema/scenario-v0.schema.json` の補助説明です。**実装契約は常に JSON Schema を正**とし、ここでは v0 で採用する最小命令セット（`say` / `choice` / `jump` / `set` / `if` / `label`）を読みやすく要約します。
 
 ## 1. ルート構造
 

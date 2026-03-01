@@ -1,6 +1,38 @@
 {
   "id": "main_story",
   "nodes": [
-    {"label": "intro", "commands": []}
+    { "type": "label", "name": "start" },
+    { "type": "say", "speaker": "Narrator", "text": "分岐のある朝が始まる。" },
+    { "type": "set", "var": "state.courage", "op": "assign", "value": 0 },
+    {
+      "type": "choice",
+      "prompt": "どう動く？",
+      "options": [
+        { "text": "一歩踏み出す", "jump": "route_brave" },
+        { "text": "様子を見る", "jump": "route_calm" }
+      ]
+    },
+    { "type": "label", "name": "route_brave" },
+    { "type": "set", "var": "state.courage", "op": "add", "value": 1 },
+    { "type": "say", "speaker": "Hero", "text": "行ってみよう。" },
+    { "type": "jump", "to": "evaluate" },
+    { "type": "label", "name": "route_calm" },
+    { "type": "say", "speaker": "Hero", "text": "慎重に進もう。" },
+    { "type": "jump", "to": "evaluate" },
+    { "type": "label", "name": "evaluate" },
+    {
+      "type": "if",
+      "cond": { "var": "state.courage", "op": "gte", "value": 1 },
+      "then": [
+        { "type": "say", "speaker": "Narrator", "text": "勇気ある選択が道を開いた。" },
+        { "type": "jump", "to": "end" }
+      ],
+      "else": [
+        { "type": "say", "speaker": "Narrator", "text": "慎重さが危険を遠ざけた。" },
+        { "type": "jump", "to": "end" }
+      ]
+    },
+    { "type": "label", "name": "end" },
+    { "type": "say", "speaker": "Narrator", "text": "物語はひとまず幕を閉じる。" }
   ]
 }

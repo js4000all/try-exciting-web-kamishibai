@@ -78,6 +78,8 @@ npm run dev -- --host 0.0.0.0 --port 5173
 
 ローカルで CI 相当のテスト・ビルドを行う最小手順です。
 
+API/モデル変更時は、リポジトリルートで必ず `./sync-and-check.sh` を実行してください。
+
 ```bash
 # API テスト
 cd server

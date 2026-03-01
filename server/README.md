@@ -27,3 +27,14 @@ kamishibai-export-openapi
 ```
 
 実行すると、`shared/schema/openapi.json` に UTF-8 の pretty print 形式で出力されます。
+
+
+## Shared Schema 検証
+
+`shared/schema/` の JSON Schema と検証用データの整合性を確認します。
+
+```bash
+cd server
+python -m pip install -e .[dev]
+kamishibai-validate-shared-schema
+```

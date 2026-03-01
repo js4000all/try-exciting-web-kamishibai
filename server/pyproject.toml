@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 kamishibai-api = "app.main:run"
+kamishibai-export-openapi = "tools.export_openapi:main"
 
 [project.optional-dependencies]
 dev = [
@@ -26,3 +27,6 @@ dev = [
 pythonpath = ["."]
 addopts = "-q"
 testpaths = ["tests"]
+
+[tool.setuptools]
+packages = ["app", "tools"]

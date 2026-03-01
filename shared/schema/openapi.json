@@ -5,6 +5,230 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v0/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Projects",
+        "operationId": "list_projects_api_v0_projects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v0/projects/{project_id}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project",
+        "operationId": "get_project_api_v0_projects__project_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v0/projects/{project_id}/scenario/chapters/{chapter_id}": {
+      "get": {
+        "tags": [
+          "scenario"
+        ],
+        "summary": "Get Chapter",
+        "operationId": "get_chapter_api_v0_projects__project_id__scenario_chapters__chapter_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioChapterResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v0/projects/{project_id}/saves/{slot}": {
+      "put": {
+        "tags": [
+          "saves"
+        ],
+        "summary": "Put Save",
+        "operationId": "put_save_api_v0_projects__project_id__saves__slot__put",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slot"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDataV0"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveWriteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "saves"
+        ],
+        "summary": "Get Save",
+        "operationId": "get_save_api_v0_projects__project_id__saves__slot__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slot"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveDataV0"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -25,6 +249,780 @@
             }
           }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChoiceCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "choice",
+            "title": "Type"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ChoiceOption"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Options"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "options"
+        ],
+        "title": "ChoiceCommand"
+      },
+      "ChoiceOption": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text"
+          },
+          "jump": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+            "title": "Jump"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "jump"
+        ],
+        "title": "ChoiceOption"
+      },
+      "ChoiceResult": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "pattern": "^.+#[0-9]+$",
+            "title": "At"
+          },
+          "choice_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Choice Id"
+          },
+          "selected_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Selected Index"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "at",
+          "choice_id",
+          "selected_index"
+        ],
+        "title": "ChoiceResult"
+      },
+      "Condition": {
+        "properties": {
+          "var": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$",
+            "title": "Var"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ],
+            "title": "Op"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "var",
+          "op",
+          "value"
+        ],
+        "title": "Condition"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IfCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "if",
+            "title": "Type"
+          },
+          "cond": {
+            "$ref": "#/components/schemas/Condition"
+          },
+          "then": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LabelCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/SayCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/ChoiceCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/JumpCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/SetCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/IfCommand"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Then"
+          },
+          "else": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LabelCommand"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SayCommand"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ChoiceCommand"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JumpCommand"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SetCommand"
+                    },
+                    {
+                      "$ref": "#/components/schemas/IfCommand"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Else"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "cond",
+          "then"
+        ],
+        "title": "IfCommand"
+      },
+      "JumpCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "jump",
+            "title": "Type"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+            "title": "To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "to"
+        ],
+        "title": "JumpCommand"
+      },
+      "LabelCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "label",
+            "title": "Type"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "name"
+        ],
+        "title": "LabelCommand"
+      },
+      "LogEntry": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Seq"
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Kind"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seq",
+          "kind",
+          "payload"
+        ],
+        "title": "LogEntry"
+      },
+      "Position": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Label"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Index"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "index"
+        ],
+        "title": "Position"
+      },
+      "ProjectDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "entry_chapter": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Entry Chapter"
+          },
+          "chapters": {
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": "array",
+            "title": "Chapters"
+          },
+          "scenario_revision": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Scenario Revision"
+          },
+          "assets_base_url": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Assets Base Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "entry_chapter",
+          "chapters",
+          "scenario_revision",
+          "assets_base_url"
+        ],
+        "title": "ProjectDetailResponse"
+      },
+      "ProjectListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ProjectListResponse"
+      },
+      "ProjectSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "entry_chapter": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Entry Chapter"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "entry_chapter",
+          "updated_at"
+        ],
+        "title": "ProjectSummary"
+      },
+      "RngState": {
+        "properties": {
+          "seed": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Seed"
+          },
+          "step": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Step"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seed",
+          "step"
+        ],
+        "title": "RngState"
+      },
+      "SaveDataV0": {
+        "properties": {
+          "state_version": {
+            "type": "string",
+            "const": "0",
+            "title": "State Version"
+          },
+          "scenario_ref": {
+            "$ref": "#/components/schemas/ScenarioRef"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "variables": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "propertyNames": {
+              "minLength": 1
+            },
+            "type": "object",
+            "title": "Variables"
+          },
+          "read_history": {
+            "items": {
+              "type": "string",
+              "pattern": "^.+#[0-9]+$"
+            },
+            "type": "array",
+            "title": "Read History"
+          },
+          "log": {
+            "items": {
+              "$ref": "#/components/schemas/LogEntry"
+            },
+            "type": "array",
+            "title": "Log"
+          },
+          "choice_results": {
+            "items": {
+              "$ref": "#/components/schemas/ChoiceResult"
+            },
+            "type": "array",
+            "title": "Choice Results"
+          },
+          "rng": {
+            "$ref": "#/components/schemas/RngState"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "state_version",
+          "scenario_ref",
+          "position",
+          "variables",
+          "read_history",
+          "log",
+          "choice_results",
+          "rng"
+        ],
+        "title": "SaveDataV0"
+      },
+      "SaveWriteResponse": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Project Id"
+          },
+          "slot": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Slot"
+          },
+          "saved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Saved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "slot",
+          "saved_at"
+        ],
+        "title": "SaveWriteResponse"
+      },
+      "SayCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "say",
+            "title": "Type"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text"
+          },
+          "speaker": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speaker"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "text"
+        ],
+        "title": "SayCommand"
+      },
+      "ScenarioChapterResponse": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Project Id"
+          },
+          "chapter_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Chapter Id"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ScenarioV0"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "chapter_id",
+          "scenario",
+          "warnings"
+        ],
+        "title": "ScenarioChapterResponse"
+      },
+      "ScenarioRef": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Revision"
+          },
+          "checksum": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Checksum"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "revision",
+          "checksum"
+        ],
+        "title": "ScenarioRef"
+      },
+      "ScenarioV0": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "nodes": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LabelCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/SayCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/ChoiceCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/JumpCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/SetCommand"
+                },
+                {
+                  "$ref": "#/components/schemas/IfCommand"
+                }
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Nodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "nodes"
+        ],
+        "title": "ScenarioV0"
+      },
+      "SetCommand": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "set",
+            "title": "Type"
+          },
+          "var": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$",
+            "title": "Var"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "op": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "assign",
+                  "add",
+                  "sub"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Op"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "var",
+          "value"
+        ],
+        "title": "SetCommand"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }

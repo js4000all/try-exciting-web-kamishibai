@@ -2,7 +2,19 @@ import { useEffect, useState } from "react";
 
 import { ApiError, apiClient } from "./api/client";
 import type { SaveDataV0 } from "./api/client";
-import type { ChoiceOption, Command, ScenarioV0, SetValue } from "./types/scenario-schema";
+
+type SetOp = "assign" | "add" | "sub";
+type SetValue = string | number | boolean | null;
+
+type LabelCommand = { type: "label"; name: string };
+type SayCommand = { type: "say"; speaker?: string; text: string };
+type ChoiceOption = { text: string; jump: string };
+type ChoiceCommand = { type: "choice"; prompt?: string; options: [ChoiceOption, ...ChoiceOption[]] };
+type JumpCommand = { type: "jump"; to: string };
+type SetCommand = { type: "set"; var: string; op?: SetOp; value: SetValue };
+type IfCommand = { type: "if"; cond: { var: string; op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte"; value: SetValue }; then: Command[]; else?: Command[] };
+type Command = LabelCommand | SayCommand | ChoiceCommand | JumpCommand | SetCommand | IfCommand;
+type ScenarioV0 = { id: string; nodes: [Command, ...Command[]] };
 
 type EngineView =
   | { kind: "say"; speaker?: string; text: string }

@@ -31,4 +31,4 @@ addopts = "-q"
 testpaths = ["tests"]
 
 [tool.setuptools]
-packages = ["app", "tools"]
+packages = ["app", "app.engine", "tools"]

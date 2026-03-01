@@ -15,3 +15,15 @@ pytest -q
 ```
 
 > 依存インストールを省略すると、`fastapi` などが見つからずテスト収集時に失敗します。
+
+## OpenAPI更新手順
+
+OpenAPI スキーマは専用コマンドで更新します。
+
+```bash
+cd server
+python -m pip install -e .
+kamishibai-export-openapi
+```
+
+実行すると、`shared/schema/openapi.json` に UTF-8 の pretty print 形式で出力されます。

@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "gen:api-types": "openapi-typescript ../shared/schema/openapi.json -o ./src/types/schema.d.ts",
-    "gen:shared-types": "json2ts -i ../shared/schema/scenario-v0.schema.json -o ./src/types/scenario-schema.d.ts && json2ts -i ../shared/schema/save-data-v0.schema.json -o ./src/types/save-data-schema.d.ts",
-    "gen:types": "npm run gen:api-types && npm run gen:shared-types"
+    "gen:types": "npm run gen:api-types"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -22,7 +21,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "openapi-typescript": "^7.6.1",
     "typescript": "^5.4.5",
-    "vite": "^5.2.0",
-    "json-schema-to-typescript": "^15.0.4"
+    "vite": "^5.2.0"
   }
 }

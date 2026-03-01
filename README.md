@@ -81,9 +81,9 @@ npm run type-check
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-`web/src/types/` は API と共有スキーマの生成型を配置するディレクトリです。`npm run gen:types` で `schema.d.ts`（OpenAPI）と `scenario-schema.d.ts` / `save-data-schema.d.ts`（JSON Schema）を再生成してください。
+`web/src/types/` は API 生成型を配置するディレクトリです。`npm run gen:types` で `schema.d.ts`（OpenAPI）を再生成してください。
 
-型定義生成物（`web/src/types/*.d.ts`）は **コミット管理** します。スキーマ変更時は `npm run gen:types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
+型定義生成物（`web/src/types/schema.d.ts`）は **コミット管理** します。OpenAPI 変更時は `npm run gen:types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
 
 ## エンジン開発者向け（CI 手順）
 

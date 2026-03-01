@@ -65,8 +65,14 @@ python tools/scenario_linter.py ../examples/scenario.json
 ```bash
 cd web
 npm install
+npm run gen:api-types
+npm run type-check
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
+
+`web/src/types/` は OpenAPI 由来の型定義を配置する専用ディレクトリです。生成物は `web/src/types/schema.d.ts` に集約し、`npm run gen:api-types` で再生成してください。
+
+型定義生成物（`web/src/types/schema.d.ts`）は **コミット管理** します。OpenAPI 変更時は `npm run gen:api-types` を実行し、差分を同時に含めてください（`.gitignore` には追加しません）。
 
 ## エンジン開発者向け（CI 手順）
 
@@ -81,6 +87,8 @@ pytest
 # Web ビルド
 cd ../web
 npm install
+npm run gen:api-types
+npm run type-check
 npm run build
 ```
 
@@ -89,4 +97,6 @@ npm run build
 1. Python セットアップ + `pip install -e .[dev]`
 2. `pytest`
 3. Node セットアップ + `npm ci`
-4. `npm run build`
+4. `npm run gen:api-types`
+5. `npm run type-check`
+6. `npm run build`
